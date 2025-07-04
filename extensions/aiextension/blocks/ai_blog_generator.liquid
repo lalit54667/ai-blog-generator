@@ -1,0 +1,45 @@
+{{ 'blog-style.css' | asset_url | stylesheet_tag }}
+
+{% if request.design_mode %}
+  <div class="ai-blog-tool">
+    <h2>📝 AI Blog Generator</h2>
+    <input type="text" id="blogTopic" placeholder="Enter blog topic..." />
+    <button onclick="generateBlog()">Generate Blog</button>
+    <p id="blogStatus"></p>
+  </div>
+
+  <script>
+    async function generateBlog() {
+      const topic = document.getElementById('blogTopic').value;
+      document.getElementById('blogStatus').innerText = '⏳ Generating...';
+
+      try {
+        const res = await fetch("https://6d26-49-43-132-175.ngrok-free.app/generate-blog", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ topic })
+        });
+
+        const data = await res.json();
+        console.log("🎯 Response:", data);
+
+        if (data.success) {
+          document.getElementById('blogStatus').innerText = '✅ Blog posted successfully!';
+        } else {
+          document.getElementById('blogStatus').innerText = '❌ Failed: ' + data.error;
+        }
+      } catch (error) {
+        document.getElementById('blogStatus').innerText = '❌ Request failed!';
+        console.error("💥 Error:", error);
+      }
+    }
+  </script>
+{% endif %}
+
+{% schema %}
+{
+  "name": "AI Blog Generator",
+  "target": "section",
+  "settings": []
+}
+{% endschema %}
