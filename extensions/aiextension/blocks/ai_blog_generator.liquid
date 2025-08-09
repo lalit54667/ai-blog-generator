@@ -4,33 +4,68 @@
   <div class="ai-blog-tool">
     <h2>📝 AI Blog Generator</h2>
     <input type="text" id="blogTopic" placeholder="Enter blog topic..." />
-    <button onclick="generateBlog()">Generate Blog</button>
+    <input type="number" id="wordCount" placeholder="Word Count (e.g., 500)" />
+    <button onclick="generatePreview()">Generate Preview</button>
     <p id="blogStatus"></p>
+
+    <div id="blogPreview" style="margin-top:20px; border:1px solid #ccc; padding:10px; display:none;"></div>
+    <button id="postBtn" style="display:none;" onclick="postBlog()">✅ Post This Blog</button>
   </div>
 
   <script>
-    async function generateBlog() {
+    let generatedContent = "";
+    let blogImage = "";
+    let blogTitle = "";
+
+    async function generatePreview() {
       const topic = document.getElementById('blogTopic').value;
-      document.getElementById('blogStatus').innerText = '⏳ Generating...';
+      const wordCount = document.getElementById('wordCount').value || 500;
+      document.getElementById('blogStatus').innerText = '⏳ Generating preview...';
 
       try {
-        const res = await fetch("https://6d26-49-43-132-175.ngrok-free.app/generate-blog", {
+        const res = await fetch("https://374f39c8c2ff.ngrok-free.app/generate-blog-preview", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ topic })
+          body: JSON.stringify({ topic, wordCount })
         });
 
         const data = await res.json();
-        console.log("🎯 Response:", data);
-
         if (data.success) {
-          document.getElementById('blogStatus').innerText = '✅ Blog posted successfully!';
+          generatedContent = data.preview;
+          blogImage = data.image;
+          blogTitle = data.title;
+          document.getElementById('blogPreview').innerHTML = data.preview;
+          document.getElementById('blogPreview').style.display = "block";
+          document.getElementById('postBtn').style.display = "inline-block";
+          document.getElementById('blogStatus').innerText = "✅ Preview generated. Ready to post!";
         } else {
-          document.getElementById('blogStatus').innerText = '❌ Failed: ' + data.error;
+          document.getElementById('blogStatus').innerText = "❌ Error: " + data.error;
         }
-      } catch (error) {
-        document.getElementById('blogStatus').innerText = '❌ Request failed!';
-        console.error("💥 Error:", error);
+      } catch (err) {
+        console.error(err);
+        document.getElementById('blogStatus').innerText = "❌ Request failed.";
+      }
+    }
+
+    async function postBlog() {
+      document.getElementById('blogStatus').innerText = '🚀 Posting blog...';
+
+      try {
+        const res = await fetch("https://374f39c8c2ff.ngrok-free.app/post-blog", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ title: blogTitle, content: generatedContent, image: blogImage })
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          document.getElementById('blogStatus').innerText = "✅ Blog posted successfully!";
+        } else {
+          document.getElementById('blogStatus').innerText = "❌ Post failed: " + data.error;
+        }
+      } catch (err) {
+        console.error(err);
+        document.getElementById('blogStatus').innerText = "❌ Request failed.";
       }
     }
   </script>
